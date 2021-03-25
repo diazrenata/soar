@@ -22,7 +22,7 @@ test_that("correct numbers of plots per treatment", {
 
   })
 
-test_that("plots have correct treatments") {
+test_that("plots have correct treatments", {
 
   # This table of treatments taken from https://github.com/emchristensen/PlotSwitch/blob/master/Data/data_functions.R line 76
   treatment = data.frame(before_after = c('CX','CE','EE','CC',
@@ -46,3 +46,4 @@ test_that("plots have correct treatments") {
 
 
 }
+)

@@ -15,6 +15,7 @@ Imports:
     ggplot2,
     here,
     portalr,
+    pracma,
     magrittr,
     tidyr
 Suggests:

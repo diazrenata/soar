@@ -12,7 +12,7 @@
 #' @export
 #'
 #' @importFrom portalr energy
-#' @importFrom dplyr mutate rename left_join
+#' @importFrom dplyr mutate rename left_join mutate_at group_by ungroup
 #' @importFrom here here
 get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_switch = F) {
 
@@ -36,7 +36,7 @@ get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_
                                       ifelse(period <= 436, "c_pre_switch", "d_post-switch"))))
 
 
-  plot_treatments <- soar:::plot_treatments %>%
+  plot_treatments <- plot_treatments %>%
     dplyr::rename(plot = Plot)
 
   plot_level <- plot_level %>%
@@ -81,7 +81,10 @@ get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_
     dplyr::select(period, censusdate, era, plot, plot_type, total_e, dipo_e, smgran_e, pb_e, pp_e, tinygran_e) %>%
     dplyr::mutate(censusdate = as.Date(censusdate),
                   oplottype = ordered(plot_type)
-    )
+    ) %>%
+    dplyr::group_by(plot) %>%
+    dplyr::mutate_at(c("total_e", "dipo_e", "smgran_e", "pb_e", "pp_e", "tinygran_e"), .funs = list(ma = maopts)) %>%
+    dplyr::ungroup()
 
 
   treatment_means <- plot_level_totals %>%
@@ -93,6 +96,9 @@ get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_
                      pb_e = mean(pb_e),
                      pp_e = mean(pp_e),
                      nplots = dplyr::n()) %>%
+    dplyr::ungroup()%>%
+    dplyr::group_by(plot_type) %>%
+    dplyr::mutate_at(c("total_e", "dipo_e", "smgran_e", "pb_e", "pp_e", "tinygran_e"), .funs = list(ma = maopts)) %>%
     dplyr::ungroup()
 
   if(return_plot) {
@@ -150,4 +156,20 @@ get_treatment_means <- function(use_pre_switch = F) {
 
   get_rodent_data(return_plot = F, use_pre_switch = use_pre_switch)
 
+}
+
+
+
+#' Moving average with default options
+#'
+#' @param x the thing to average
+#' @param n window length, default 6
+#' @param type type, default "s"
+#'
+#' @return movavg
+#' @export
+#'
+#' @importFrom pracma movavg
+maopts <- function(x, n = 6, type = "s") {
+  pracma::movavg(x, n = n, type = type)
 }
