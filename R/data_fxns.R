@@ -36,7 +36,7 @@ get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_
                                       ifelse(period <= 436, "c_pre_switch", "d_post-switch"))))
 
 
-  plot_treatments <- read.csv(here::here("supporting_files", "plot_treatments.csv")) %>%
+  plot_treatments <- soar:::plot_treatments %>%
     dplyr::rename(plot = Plot)
 
   plot_level <- plot_level %>%
