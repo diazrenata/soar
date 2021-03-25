@@ -2,6 +2,8 @@
 #'
 #' Core function for getting rodent data.
 #'
+#' Gives data from February 1988 until either March 2015 or May 2019, depending on use_pre_switch.
+#'
 #' @param use_christensen_plots Early in development I was working from the plots used in Christensen (2019 ProcB). Defaults F
 #' @param return_plot Return plot level energy use or return treatment level. If TRUE, returns plot level totals. If F, returns mean per treatment per period.
 #' @param use_pre_switch Use data up to the treatment switch in 2015? If yes, allows for more plots of each treatment type.
@@ -31,7 +33,7 @@ get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_
     dplyr::mutate(era = NA) %>%
     dplyr::mutate(era = ifelse(period <= 216, "a_pre_ba",
                                ifelse(period <= 380, "b_pre_cpt",
-                                      ifelse(period <= 434, "c_pre_switch", "d_post-switch"))))
+                                      ifelse(period <= 436, "c_pre_switch", "d_post-switch"))))
 
 
   plot_treatments <- read.csv(here::here("supporting_files", "plot_treatments.csv")) %>%
@@ -45,7 +47,7 @@ get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_
     plot_level <- plot_level %>%
       dplyr::filter(Use_first,
                     period > 118,
-                    period < 434) %>%
+                    period < 436) %>%
       dplyr::mutate(plot_type =
                       first_trt)
 
@@ -117,5 +119,35 @@ list_plot_types <- function(use_pre_switch = F) {
   plots %>%
     dplyr::select(plot, plot_type) %>%
     dplyr::distinct()
+
+}
+
+#' Get plot totals
+#'
+#' Quick wrapper for get_rodent_data.
+#'
+#' @param use_pre_switch use pre switch T/F
+#'
+#' @return data
+#' @export
+#'
+get_plot_totals <- function(use_pre_switch = F) {
+
+  get_rodent_data(return_plot = T, use_pre_switch = use_pre_switch)
+
+}
+
+#' Get treatment means
+#'
+#' Quick wrapper for get_rodent_data.
+#'
+#' @param use_pre_switch use pre switch T/F
+#'
+#' @return data
+#' @export
+#'
+get_treatment_means <- function(use_pre_switch = F) {
+
+  get_rodent_data(return_plot = F, use_pre_switch = use_pre_switch)
 
 }

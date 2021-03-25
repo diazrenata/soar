@@ -19,3 +19,6 @@ data
 \description{
 Core function for getting rodent data.
 }
+\details{
+Gives data from February 1988 until either March 2015 or May 2019, depending on use_pre_switch.
+}
