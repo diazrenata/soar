@@ -29,18 +29,9 @@ get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_
                                 min_plots = 24,
                                 effort = T
   ) %>%
+    add_eras() %>%
+    add_plot_types()
 
-    dplyr::mutate(era = NA) %>%
-    dplyr::mutate(era = ifelse(period <= 216, "a_pre_ba",
-                               ifelse(period <= 380, "b_pre_cpt",
-                                      ifelse(period <= 436, "c_pre_switch", "d_post-switch"))))
-
-
-  plot_treatments <- plot_treatments %>%
-    dplyr::rename(plot = Plot)
-
-  plot_level <- plot_level %>%
-    dplyr::left_join(plot_treatments)
 
   if(use_pre_switch) {
 
@@ -78,9 +69,11 @@ get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_
                   tinygran_e = rowSums(.[tinygran_names]),
                   pb_e = PB,
                   pp_e = PP) %>%
-    dplyr::select(period, censusdate, era, plot, plot_type, total_e, dipo_e, smgran_e, pb_e, pp_e, tinygran_e) %>%
+    dplyr::select(period, censusdate, era, oera, plot, plot_type, total_e, dipo_e, smgran_e, pb_e, pp_e, tinygran_e) %>%
     dplyr::mutate(censusdate = as.Date(censusdate),
-                  oplottype = ordered(plot_type)
+                  oplottype = ordered(plot_type),
+                  fplottype = as.factor(plot_type),
+                  fplot = as.factor(plot)
     ) %>%
     dplyr::group_by(plot) %>%
     dplyr::mutate_at(c("total_e", "dipo_e", "smgran_e", "pb_e", "pp_e", "tinygran_e"), .funs = list(ma = maopts)) %>%
@@ -88,7 +81,7 @@ get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_
 
 
   treatment_means <- plot_level_totals %>%
-    dplyr::group_by(period, censusdate, era, plot_type) %>%
+    dplyr::group_by(period, censusdate, era, oera, plot_type, oplottype) %>%
     dplyr::summarize(total_e = mean(total_e),
                      dipo_e = mean(dipo_e),
                      smgran_e = mean(smgran_e),
@@ -97,7 +90,7 @@ get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_
                      pp_e = mean(pp_e),
                      nplots = dplyr::n()) %>%
     dplyr::ungroup()%>%
-    dplyr::group_by(plot_type) %>%
+    dplyr::group_by(plot_type, oplottype) %>%
     dplyr::mutate_at(c("total_e", "dipo_e", "smgran_e", "pb_e", "pp_e", "tinygran_e"), .funs = list(ma = maopts)) %>%
     dplyr::ungroup()
 
@@ -172,4 +165,66 @@ get_treatment_means <- function(use_pre_switch = F) {
 #' @importFrom pracma movavg
 maopts <- function(x, n = 6, type = "s") {
   pracma::movavg(x, n = n, type = type)
+}
+
+#' Add plot types
+#'
+#' @param dat A dataset with column Plot
+#'
+#' @return dat with plot types added
+#' @export
+#'
+#' @importFrom dplyr rename left_join
+add_plot_types <- function(dat) {
+
+  plot_treatments <- plot_treatments %>%
+    dplyr::rename(plot = Plot)
+
+  dat <- dat %>%
+    dplyr::left_join(plot_treatments)
+
+  return(dat)
+}
+
+#' Add "eras"
+#'
+#' Breaking the time series into 4 chunks: prior to 1996, 1996-ca 2010, 2010-2015, post plot switch
+#'
+#' @param dat Dataset with column "period"
+#'
+#' @return dat with column "era" added
+#' @export
+#'
+#' @importFrom dplyr mutate
+add_eras <- function(dat) {
+  dat <- dat %>%
+    dplyr::mutate(era = NA) %>%
+    dplyr::mutate(era = ifelse(period <= 216, "a_pre_ba",
+                               ifelse(period <= 380, "b_pre_cpt",
+                                      ifelse(period <= 436, "c_pre_switch", "d_post-switch")))) %>%
+    dplyr::mutate(oera = as.ordered(era))
+
+  return(dat)
+
+}
+
+#' Add temporary treatments
+#'
+#' @param dat dataframe iwth plot_type, period
+#'
+#' @return dat with column temp_plot_type for what treatment a plot had at each timestep
+#' @export
+#'
+#' @importFrom dplyr group_by_all mutate ungroup left_join
+add_temp_treatments <- function(dat) {
+
+  temp_treatments <- expand.grid(plot_type = unique(dat$plot_type),
+                                 period = unique(dat$period)) %>%
+    dplyr::group_by_all() %>%
+    dplyr::mutate(temp_plot_type = ifelse(period <= 436, substr(as.character(plot_type), 1, 1), substr(as.character(plot_type), 2, 2))) %>%
+    dplyr::ungroup()
+
+  dat <- dplyr::left_join(dat, temp_treatments)
+
+  return(dat)
 }
