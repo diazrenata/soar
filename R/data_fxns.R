@@ -7,6 +7,7 @@
 #' @param use_christensen_plots Early in development I was working from the plots used in Christensen (2019 ProcB). Defaults F
 #' @param return_plot Return plot level energy use or return treatment level. If TRUE, returns plot level totals. If F, returns mean per treatment per period.
 #' @param use_pre_switch Use data up to the treatment switch in 2015? If yes, allows for more plots of each treatment type.
+#' @param currency "energy" (default) or "abundance"
 #'
 #' @return data
 #' @export
@@ -14,8 +15,10 @@
 #' @importFrom portalr energy
 #' @importFrom dplyr mutate rename left_join mutate_at group_by ungroup
 #' @importFrom here here
-get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_switch = F) {
+#' @importFrom stringr str_replace
+get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_switch = F, currency = "energy") {
 
+  if(currency == "energy") {
   plot_level <- portalr::energy(clean = T,
                                 level = "Plot",
                                 type = "Granivores", # this removes NA, OL, OT, ...cotton rats, perhaps?
@@ -31,6 +34,23 @@ get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_
   ) %>%
     add_eras() %>%
     add_plot_types()
+  } else if(currency == "abundance") {
+    plot_level <- portalr::abundance(clean = T,
+                                  level = "Plot",
+                                  type = "Granivores", # this removes NA, OL, OT, ...cotton rats, perhaps?
+                                  plots = "all",
+                                  unknowns = F,
+                                  shape = "crosstab",
+                                  time = "all",
+                                  na_drop = T,
+                                  zero_drop = F,
+                                  min_traps = 45, # allow partially trapped plots - 45 or 47, of 49, plots. Necessary bc apparently plot 24 was often trapped to 47 for the 2010s.
+                                  min_plots = 24,
+                                  effort = T
+    ) %>%
+      add_eras() %>%
+      add_plot_types()
+  }
 
 
   if(use_pre_switch) {
@@ -79,6 +99,40 @@ get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_
     dplyr::mutate_at(c("total_e", "dipo_e", "smgran_e", "pb_e", "pp_e", "tinygran_e"), .funs = list(ma = maopts)) %>%
     dplyr::ungroup()
 
+  treatment_means <- plots_to_treatment_means(plot_level_totals, currency = currency)
+
+  if(currency == "abundance") {
+
+    plotcols <- colnames(plot_level_totals)
+
+    plotcols_to_change <- plotcols[ which(grepl("_e", plotcols))]
+
+    new_plotcols <- stringr::str_replace(plotcols_to_change, "_e", "_n")
+
+    colnames(plot_level_totals)[ which(grepl("_e", plotcols))] <- new_plotcols
+
+
+  }
+
+  if(return_plot) {
+    return(plot_level_totals)
+  }
+
+  return(treatment_means)
+}
+
+#' Go from plot level totals to treatment means
+#'
+#' @param plot_level_totals plots
+#' @param currency "energy" or "abundance"
+#'
+#' @return treatment means
+#' @export
+#'
+#' @importFrom dplyr group_by summarize ungroup mutate_at
+#' @importFrom stringr str_replace
+plots_to_treatment_means <- function(plot_level_totals, currency) {
+
 
   treatment_means <- plot_level_totals %>%
     dplyr::group_by(period, censusdate, era, oera, plot_type, oplottype) %>%
@@ -94,12 +148,19 @@ get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_
     dplyr::mutate_at(c("total_e", "dipo_e", "smgran_e", "pb_e", "pp_e", "tinygran_e"), .funs = list(ma = maopts)) %>%
     dplyr::ungroup()
 
-  if(return_plot) {
-    return(plot_level_totals)
-  }
-  return(treatment_means)
-}
+  if(currency == "abundance") {
+    treatcols <- colnames(treatment_means)
 
+  treatcols_to_change <- treatcols[ which(grepl("_e", treatcols))]
+
+  new_treatcols <- stringr::str_replace(treatcols_to_change, "_e", "_n")
+
+  colnames(treatment_means)[ which(grepl("_e", treatcols))] <- new_treatcols
+  }
+
+  return(treatment_means)
+
+}
 
 #' List which plots are which treatments
 #'
@@ -126,13 +187,14 @@ list_plot_types <- function(use_pre_switch = F) {
 #' Quick wrapper for get_rodent_data.
 #'
 #' @param use_pre_switch use pre switch T/F
+#' @param currency "energy" or "abundance"
 #'
 #' @return data
 #' @export
 #'
-get_plot_totals <- function(use_pre_switch = F) {
+get_plot_totals <- function(use_pre_switch = F, currency = "energy") {
 
-  get_rodent_data(return_plot = T, use_pre_switch = use_pre_switch)
+  get_rodent_data(return_plot = T, use_pre_switch = use_pre_switch, currency = currency)
 
 }
 
@@ -141,13 +203,14 @@ get_plot_totals <- function(use_pre_switch = F) {
 #' Quick wrapper for get_rodent_data.
 #'
 #' @param use_pre_switch use pre switch T/F
+#' @param currency "energy" or "abundance"
 #'
 #' @return data
 #' @export
 #'
-get_treatment_means <- function(use_pre_switch = F) {
+get_treatment_means <- function(use_pre_switch = F, currency = "energy") {
 
-  get_rodent_data(return_plot = F, use_pre_switch = use_pre_switch)
+  get_rodent_data(return_plot = F, use_pre_switch = use_pre_switch, currency = currency)
 
 }
 
