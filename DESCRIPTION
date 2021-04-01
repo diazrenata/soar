@@ -17,6 +17,7 @@ Imports:
     portalr,
     pracma,
     magrittr,
+    stringr,
     tidyr
 Suggests:
     testthat
