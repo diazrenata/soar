@@ -8,7 +8,8 @@ get_rodent_data(
   use_christensen_plots = F,
   return_plot = F,
   use_pre_switch = F,
-  currency = "energy"
+  currency = "energy",
+  clean = F
 )
 }
 \arguments{
@@ -19,6 +20,8 @@ get_rodent_data(
 \item{use_pre_switch}{Use data up to the treatment switch in 2015? If yes, allows for more plots of each treatment type.}
 
 \item{currency}{"energy" (default) or "abundance"}
+
+\item{clean}{passed to portalr, whether to use only qa data or not}
 }
 \value{
 data

@@ -4,12 +4,14 @@
 \alias{get_treatment_means}
 \title{Get treatment means}
 \usage{
-get_treatment_means(use_pre_switch = F, currency = "energy")
+get_treatment_means(use_pre_switch = F, currency = "energy", clean = F)
 }
 \arguments{
 \item{use_pre_switch}{use pre switch T/F}
 
 \item{currency}{"energy" or "abundance"}
+
+\item{clean}{passed to portalr, whether to use only qa data or not}
 }
 \value{
 data

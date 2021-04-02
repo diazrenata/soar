@@ -8,6 +8,7 @@
 #' @param return_plot Return plot level energy use or return treatment level. If TRUE, returns plot level totals. If F, returns mean per treatment per period.
 #' @param use_pre_switch Use data up to the treatment switch in 2015? If yes, allows for more plots of each treatment type.
 #' @param currency "energy" (default) or "abundance"
+#' @param clean passed to portalr, whether to use only qa data or not
 #'
 #' @return data
 #' @export
@@ -16,10 +17,10 @@
 #' @importFrom dplyr mutate rename left_join mutate_at group_by ungroup
 #' @importFrom here here
 #' @importFrom stringr str_replace
-get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_switch = F, currency = "energy") {
+get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_switch = F, currency = "energy", clean =F) {
 
   if(currency == "energy") {
-  plot_level <- portalr::energy(clean = T,
+  plot_level <- portalr::energy(clean = clean,
                                 level = "Plot",
                                 type = "Granivores", # this removes NA, OL, OT, ...cotton rats, perhaps?
                                 plots = "all",
@@ -188,13 +189,14 @@ list_plot_types <- function(use_pre_switch = F) {
 #'
 #' @param use_pre_switch use pre switch T/F
 #' @param currency "energy" or "abundance"
+#' @param clean passed to portalr, whether to use only qa data or not
 #'
 #' @return data
 #' @export
 #'
-get_plot_totals <- function(use_pre_switch = F, currency = "energy") {
+get_plot_totals <- function(use_pre_switch = F, currency = "energy", clean = F) {
 
-  get_rodent_data(return_plot = T, use_pre_switch = use_pre_switch, currency = currency)
+  get_rodent_data(return_plot = T, use_pre_switch = use_pre_switch, currency = currency, clean = clean)
 
 }
 
@@ -204,13 +206,13 @@ get_plot_totals <- function(use_pre_switch = F, currency = "energy") {
 #'
 #' @param use_pre_switch use pre switch T/F
 #' @param currency "energy" or "abundance"
-#'
+#' @param clean passed to portalr, whether to use only qa data or not
 #' @return data
 #' @export
 #'
-get_treatment_means <- function(use_pre_switch = F, currency = "energy") {
+get_treatment_means <- function(use_pre_switch = F, currency = "energy", clean = F) {
 
-  get_rodent_data(return_plot = F, use_pre_switch = use_pre_switch, currency = currency)
+  get_rodent_data(return_plot = F, use_pre_switch = use_pre_switch, currency = currency, clean = clean)
 
 }
 
