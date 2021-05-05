@@ -293,3 +293,65 @@ add_temp_treatments <- function(dat) {
 
   return(dat)
 }
+
+#' Get Portal plants ready for ldats
+#'
+#' @param census_season "winter" or summmer
+#' @param plot_type "CC", "CE", "EE", "EC"
+#'
+#' @return ready for ldats
+#' @export
+#'
+#' @importFrom portalr plant_abundance
+#' @importFrom dplyr filter select mutate
+#' @importFrom tidyr pivot_wider
+get_plants_annual_ldats <- function(census_season = "winter", plot_type = "CC") {
+
+
+  if(census_season == "winter") {
+    quadrats <- portalr::plant_abundance(level = "Plot", type = "Winter Annuals", plots = "all")
+  } else {
+    quadrats <- portalr::plant_abundance(level = "Plot", type = "Summer Annuals", plots = "all")
+
+  }
+#
+#   quadrat_censuses <- portalr::load_plant_data()$census_table
+#
+#   quadrat_censuses <- quadrat_censuses %>%
+#     add_plot_types() %>%
+#     filter(censused == 1,
+#            combined_trt %in% c("CC", "CE", "EE", "EC")) %>%
+#     group_by(combined_trt, season, year) %>%
+#     summarize(nquads = dplyr::n(),
+#               nplots = length(unique(plot))) %>%
+#     ungroup()
+#
+#   quadrat_census_sum <- quadrat_censuses %>%
+#     filter(year > 1982) %>%
+#     group_by(combined_trt, season, nquads, nplots)%>%
+#     summarize(ninstances = dplyr::n())
+
+  quadrats_plots <- quadrats %>%
+    add_plot_types() %>%
+    dplyr::filter(combined_trt == plot_type,
+                  year > 1982, # fewer plots were censused
+                  season == census_season)
+
+  quadrats_totals <- quadrats_plots %>%
+    dplyr::group_by(year, species) %>%
+    dplyr::summarize(abundance = sum(abundance)) %>%
+    dplyr::ungroup()
+
+  quadrats_wide <- quadrats_totals %>%
+    tidyr::pivot_wider(id_cols = year, names_from = species, values_from = abundance, values_fill = 0)
+
+  abundance <- dplyr::select(quadrats_wide, -year)
+  covariates <- dplyr::select(quadrats_wide, year) %>%
+    dplyr::mutate(season = census_season,
+                  plot_type = plot_type)
+
+  abund_dat <- list(abundance = abundance,
+                    covariates = covariates)
+
+  return(abund_dat)
+}
