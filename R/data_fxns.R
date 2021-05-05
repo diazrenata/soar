@@ -334,7 +334,9 @@ get_plants_annual_ldats <- function(census_season = "winter", plot_type = "CC") 
   quadrats_plots <- quadrats %>%
     add_plot_types() %>%
     dplyr::filter(combined_trt == plot_type,
-                  year > 1982, # fewer plots were censused
+                  year > 1982, # fewer plots were censused,
+                  year > 1988, # all plant treatments stopped in 88
+                  year < 2021, # for future compatibility
                   season == census_season)
 
   quadrats_totals <- quadrats_plots %>%
