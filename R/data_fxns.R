@@ -357,3 +357,57 @@ get_plants_annual_ldats <- function(census_season = "winter", plot_type = "CC") 
 
   return(abund_dat)
 }
+
+#' Get plot-level plant data
+#'
+#' @param census_season "winter" or "summer"
+#'
+#' @return wide dataframe
+#' @export
+#'
+#' @importFrom portalr plant_abundance
+#' @importFrom dplyr filter
+#' @importFrom tidyr pivot_wider
+get_plants_plots <- function(census_season = "winter") {
+
+
+  if(census_season == "winter") {
+    quadrats <- portalr::plant_abundance(level = "Plot", type = "Winter Annuals", plots = "all")
+  } else {
+    quadrats <- portalr::plant_abundance(level = "Plot", type = "Summer Annuals", plots = "all")
+
+  }
+
+  quadrats_plots <- quadrats %>%
+    add_plot_types() %>%
+    dplyr::filter(year > 1982, # fewer plots were censused,
+                  year > 1988, # all plant treatments stopped in 88
+                  year < 2021, # for future compatibility
+                  season == census_season)
+
+  quadrats_wide <- quadrats_plots %>%
+    tidyr::pivot_wider(id_cols = c(year, plot, season, combined_trt), names_from = species, values_from = abundance, values_fill = 0)
+
+  return(quadrats_wide)
+}
+
+
+#' Remove switch
+#'
+#' @param a_df df with cols plot_type, era
+#'
+#' @return df filterd to longterm plots and with the final era changed to c_post_cpt
+#' @export
+#'
+#' @importFrom dplyr filter group_by_all mutate ungroup
+remove_switch <- function(a_df) {
+
+  a_df %>%
+    dplyr::filter(plot_type %in% c("CC", "EE")) %>%
+    dplyr::group_by_all() %>%
+    dplyr::mutate(era = ifelse(era %in% c("c_pre_switch", "d_post-switch"), "c_post_cpt", era)) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(oera = as.ordered(era),
+                  oplottype = as.ordered(plot_type))
+
+}
