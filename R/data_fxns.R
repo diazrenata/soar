@@ -296,61 +296,28 @@ add_temp_treatments <- function(dat) {
 
 #' Get Portal plants ready for ldats
 #'
+#' Returns list of abundance (wide abundance matrix, no 0 years) and covariates.
+#'
 #' @param census_season "winter" or summmer
 #' @param plot_type "CC", "CE", "EE", "EC"
 #'
 #' @return ready for ldats
 #' @export
 #'
-#' @importFrom portalr plant_abundance
-#' @importFrom dplyr filter select mutate
-#' @importFrom tidyr pivot_wider
+#' @importFrom dplyr filter select rename
 get_plants_annual_ldats <- function(census_season = "winter", plot_type = "CC") {
 
+  plant_dat <- get_treatment_abundance_matrix(census_season = census_season) %>%
+    dplyr::filter(year > 1988)
 
-  if(census_season == "winter") {
-    quadrats <- portalr::plant_abundance(level = "Plot", type = "Winter Annuals", plots = "all")
-  } else {
-    quadrats <- portalr::plant_abundance(level = "Plot", type = "Summer Annuals", plots = "all")
-
-  }
-#
-#   quadrat_censuses <- portalr::load_plant_data()$census_table
-#
-#   quadrat_censuses <- quadrat_censuses %>%
-#     add_plot_types() %>%
-#     filter(censused == 1,
-#            combined_trt %in% c("CC", "CE", "EE", "EC")) %>%
-#     group_by(combined_trt, season, year) %>%
-#     summarize(nquads = dplyr::n(),
-#               nplots = length(unique(plot))) %>%
-#     ungroup()
-#
-#   quadrat_census_sum <- quadrat_censuses %>%
-#     filter(year > 1982) %>%
-#     group_by(combined_trt, season, nquads, nplots)%>%
-#     summarize(ninstances = dplyr::n())
-
-  quadrats_plots <- quadrats %>%
-    add_plot_types() %>%
+  this_dat <- plant_dat %>%
     dplyr::filter(combined_trt == plot_type,
-                  year > 1982, # fewer plots were censused,
-                  year > 1988, # all plant treatments stopped in 88
-                  year < 2021, # for future compatibility
-                  season == census_season)
+                  total_abundance > 0)
 
-  quadrats_totals <- quadrats_plots %>%
-    dplyr::group_by(year, species) %>%
-    dplyr::summarize(abundance = sum(abundance)) %>%
-    dplyr::ungroup()
+  abundance <- dplyr::select(this_dat, -c(year, season, combined_trt, total_plots, total_empty_plots, total_abundance))
 
-  quadrats_wide <- quadrats_totals %>%
-    tidyr::pivot_wider(id_cols = year, names_from = species, values_from = abundance, values_fill = 0)
-
-  abundance <- dplyr::select(quadrats_wide, -year)
-  covariates <- dplyr::select(quadrats_wide, year) %>%
-    dplyr::mutate(season = census_season,
-                  plot_type = plot_type)
+  covariates <- dplyr::select(this_dat, year, season, combined_trt, total_plots) %>%
+    dplyr::rename(plot_type = combined_trt)
 
   abund_dat <- list(abundance = abundance,
                     covariates = covariates)
@@ -360,16 +327,25 @@ get_plants_annual_ldats <- function(census_season = "winter", plot_type = "CC") 
 
 #' Get plot-level plant data
 #'
+#' For winter and summer censuses for CC, EE plots from 1988-2019, all plots are censused and all plots have 16 quadrats censused. There are however plots that had no individuals. This function adds those in as empties (0 abundance)
+#'
 #' @param census_season "winter" or "summer"
 #'
-#' @return wide dataframe
+#' @return wide dataframe of species abundance per plot, including records for empty plots.
 #' @export
 #'
-#' @importFrom portalr plant_abundance
-#' @importFrom dplyr filter
+#' @importFrom portalr plant_abundance load_plant_data
+#' @importFrom dplyr filter group_by summarize ungroup select mutate group_by_all left_join
 #' @importFrom tidyr pivot_wider
-get_plants_plots <- function(census_season = "winter") {
+get_plants <- function(census_season = "winter") {
 
+
+  na_to_zero <- function(val) {
+    if(is.na(val)) {
+      return(0)
+    }
+    return(val)
+  }
 
   if(census_season == "winter") {
     quadrats <- portalr::plant_abundance(level = "Plot", type = "Winter Annuals", plots = "all")
@@ -378,19 +354,145 @@ get_plants_plots <- function(census_season = "winter") {
 
   }
 
-  quadrats_plots <- quadrats %>%
-    add_plot_types() %>%
-    dplyr::filter(year > 1982, # fewer plots were censused,
-                  year > 1988, # all plant treatments stopped in 88
-                  year < 2021, # for future compatibility
-                  season == census_season)
+  plant_tables <- portalr::load_plant_data()
 
-  quadrats_wide <- quadrats_plots %>%
-    tidyr::pivot_wider(id_cols = c(year, plot, season, combined_trt), names_from = species, values_from = abundance, values_fill = 0)
+  plant_cenuses <- plant_tables$census_table
+
+  all_plots_censused <- plant_cenuses %>%
+    dplyr::filter(season == census_season,
+                  censused == 1,
+                  year >= 1988,
+                  year < 2021) %>%
+    dplyr::group_by(year, season, plot) %>%
+    dplyr::summarize(quadrats_censused = sum(censused)) %>%
+    dplyr::ungroup() %>%
+    add_plot_types() %>%
+    dplyr::select(year, season, plot, quadrats_censused, combined_trt) %>%
+    dplyr::filter(combined_trt %in% c("CC", "EE"))
+
+  all_plots_quaddat <- all_plots_censused %>%
+    dplyr::left_join(quadrats) %>%
+    dplyr::group_by_all() %>%
+    dplyr::mutate(empty_plot = is.na(species),
+                  abundance = na_to_zero(abundance)) %>%
+    dplyr::ungroup() %>%
+    dplyr::group_by(year, plot, season) %>%
+    dplyr::mutate(plot_total_abundance = sum(abundance))
+
+  quadrats_wide <- all_plots_quaddat %>%
+    tidyr::pivot_wider(id_cols = c(year, plot, season, combined_trt, empty_plot, quadrats_censused, plot_total_abundance), names_from = species, values_from = abundance, values_fill = 0) %>%
+    dplyr::select(-`NA`)
 
   return(quadrats_wide)
 }
 
+#' Get Erodium data (plot level)
+#'
+#' Includes rows for empty plots.
+#'
+#' @param census_season "winter"
+#'
+#' @return df
+#' @export
+#'
+#' @importFrom dplyr select distinct group_by summarize ungroup rename mutate
+get_erodium_plot <- function(census_season = "winter") {
+
+  plant_dat <- get_plants(census_season = census_season)
+
+  plots_per_treatment <- plant_dat %>%
+    dplyr::select(year, season, combined_trt, plot, empty_plot) %>%
+    dplyr::distinct() %>%
+    dplyr::group_by(year, season, combined_trt) %>%
+    dplyr::summarize(
+      total_plots = length(unique(plot)),
+      empty_plots = sum(empty_plot)
+    ) %>%
+    dplyr::ungroup()
+
+  plot_totals <- plant_dat %>%
+    dplyr::select(year, season, plot, combined_trt, empty_plot, plot_total_abundance, `erod cicu`) %>%
+    dplyr::rename(erod_plot_abundance = `erod cicu`) %>%
+    dplyr::mutate(erod_plot_prop_abundance = erod_plot_abundance / plot_total_abundance)
+
+  return(plot_totals)
+}
+
+#' Get Erodium data (treatment level)
+#'
+#' To use these data, note that there are 5 EE and 4 CC plots. The prop data is fine but you want to standardize the totals.
+#'
+#' @param census_season "winter"
+#'
+#' @return df
+#' @export
+#'
+#' @importFrom dplyr group_by summarize ungroup mutate
+get_erodium_treatment <- function(census_season = "winter") {
+
+  erodium_plots <- get_erodium_plot(census_season = census_season)
+
+  erodium_treatments <- erodium_plots %>%
+    dplyr::group_by(year, season, combined_trt) %>%
+    dplyr::summarize(
+      erod_total_abundance = sum(erod_plot_abundance),
+      total_total_abundance = sum(plot_total_abundance),
+      total_plots = length(unique(plot)),
+      total_empty_plots = sum(empty_plot)
+    ) %>%
+    dplyr::ungroup() %>%
+    dplyr::mutate(erod_treatment_prop_abundance = erod_total_abundance / total_total_abundance)
+
+
+  return(erodium_treatments)
+}
+
+#' Get plot-level plant abundance matrix
+#'
+#' Includes rows for empty plots.
+#'
+#' @param census_season "winter" or "summer"
+#'
+#' @return df
+#' @export
+#'
+get_plot_abundance_matrix <- function(census_season = "winter") {
+
+  plant_dat <- get_plants(census_season = census_season)
+
+  return(plant_dat)
+}
+
+#' Get treatment-level plant abundance matrix
+#'
+#' Includes rows for empty treatments, columns for number of plots, total abundance, and number of empty plots.
+#'
+#' Note that there are 4 CC and 5 EE plots. Before using, you want to standardize.
+#'
+#' @param census_season "winter" or "summer"
+#'
+#' @return df
+#' @export
+#'
+#' @importFrom dplyr group_by mutate ungroup summarize_at all_of
+get_treatment_abundance_matrix <- function(census_season = "winter") {
+  plant_dat <- get_plants(census_season = census_season)
+
+  plantcols <- colnames(plant_dat)[8:ncol(plant_dat)]
+
+  treatment_dat <- plant_dat %>%
+    dplyr::group_by(year, season, combined_trt) %>%
+    dplyr::mutate(total_plots = length(unique(plot)),
+                  total_empty_plots = sum(empty_plot),
+                  total_abundance = sum(plot_total_abundance)) %>%
+    dplyr::ungroup() %>%
+    dplyr::group_by(year, season, combined_trt, total_plots, total_empty_plots, total_abundance) %>%
+    dplyr::summarize_at(dplyr::all_of(plantcols), .funs = sum) %>%
+    dplyr::ungroup()
+
+  return(treatment_dat)
+
+}
 
 #' Remove switch
 #'

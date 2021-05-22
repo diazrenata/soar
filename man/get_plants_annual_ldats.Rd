@@ -15,5 +15,5 @@ get_plants_annual_ldats(census_season = "winter", plot_type = "CC")
 ready for ldats
 }
 \description{
-Get Portal plants ready for ldats
+Returns list of abundance (wide abundance matrix, no 0 years) and covariates.
 }
