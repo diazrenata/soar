@@ -320,7 +320,8 @@ get_plants_annual_ldats <- function(census_season = "winter", plot_type = "CC") 
     dplyr::rename(plot_type = combined_trt)
 
   abund_dat <- list(abundance = abundance,
-                    covariates = covariates)
+                    covariates = covariates,
+                    metadata = list(portal_dat = paste0(census_season, "_", plot_type, "_annuals")))
 
   return(abund_dat)
 }
