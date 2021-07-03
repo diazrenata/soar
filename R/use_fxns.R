@@ -68,7 +68,7 @@ get_e_ratio <- function(treatl = NULL) {
 get_compensation <- function(treatl = NULL) {
   if(is.null(treatl)) {
     treatl <- get_treatment_means() %>%
-      remove_switch()
+     remove_switch()
   }
 
   controls <- treatl %>%

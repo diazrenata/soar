@@ -4,11 +4,9 @@
 \alias{get_plot_totals}
 \title{Get plot totals}
 \usage{
-get_plot_totals(use_pre_switch = F, currency = "energy", clean = F)
+get_plot_totals(currency = "energy", clean = F)
 }
 \arguments{
-\item{use_pre_switch}{use pre switch T/F}
-
 \item{currency}{"energy" or "abundance"}
 
 \item{clean}{passed to portalr, whether to use only qa data or not}

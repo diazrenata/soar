@@ -13,5 +13,5 @@ add_eras(dat)
 dat with column "era" added
 }
 \description{
-Breaking the time series into 4 chunks: prior to 1996, 1996-ca 2010, 2010-2015, post plot switch
+Breaking the time series into 3 chunks: Jan 1988-June 1997, July 1997-January 2010, January 2010-January 2020
 }

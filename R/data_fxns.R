@@ -4,9 +4,7 @@
 #'
 #' Gives data from February 1988 until either March 2015 or May 2019, depending on use_pre_switch.
 #'
-#' @param use_christensen_plots Early in development I was working from the plots used in Christensen (2019 ProcB). Defaults F
-#' @param return_plot Return plot level energy use or return treatment level. If TRUE, returns plot level totals. If F, returns mean per treatment per period.
-#' @param use_pre_switch Use data up to the treatment switch in 2015? If yes, allows for more plots of each treatment type.
+#' @param return_plot Return plot level energy use or return treatment level. If TRUE, returns plot level totals. If F, returns mean per treatment per period
 #' @param currency "energy" (default) or "abundance"
 #' @param clean passed to portalr, whether to use only qa data or not
 #'
@@ -17,28 +15,12 @@
 #' @importFrom dplyr mutate rename left_join mutate_at group_by ungroup
 #' @importFrom here here
 #' @importFrom stringr str_replace
-get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_switch = F, currency = "energy", clean =F) {
+get_rodent_data <- function(return_plot = F, currency = "energy", clean =F) {
 
   if(currency == "energy") {
-  plot_level <- portalr::energy(clean = clean,
-                                level = "Plot",
-                                type = "Granivores", # this removes NA, OL, OT, ...cotton rats, perhaps?
-                                plots = "all",
-                                unknowns = F,
-                                shape = "crosstab",
-                                time = "all",
-                                na_drop = T,
-                                zero_drop = F,
-                                min_traps = 45, # allow partially trapped plots - 45 or 47, of 49, plots. Necessary bc apparently plot 24 was often trapped to 47 for the 2010s.
-                                min_plots = 24,
-                                effort = T
-  ) %>%
-    add_eras() %>%
-    add_plot_types()
-  } else if(currency == "abundance") {
-    plot_level <- portalr::abundance(clean = T,
+    plot_level <- portalr::energy(clean = clean,
                                   level = "Plot",
-                                  type = "Granivores", # this removes NA, OL, OT, ...cotton rats, perhaps?
+                                  type = "Granivores",
                                   plots = "all",
                                   unknowns = F,
                                   shape = "crosstab",
@@ -51,31 +33,30 @@ get_rodent_data <- function(use_christensen_plots = F, return_plot = F, use_pre_
     ) %>%
       add_eras() %>%
       add_plot_types()
+  } else if(currency == "abundance") {
+    plot_level <- portalr::abundance(clean = T,
+                                     level = "Plot",
+                                     type = "Granivores",
+                                     plots = "all",
+                                     unknowns = F,
+                                     shape = "crosstab",
+                                     time = "all",
+                                     na_drop = T,
+                                     zero_drop = F,
+                                     min_traps = 45, # allow partially trapped plots - 45 or 47, of 49, plots. Necessary bc apparently plot 24 was often trapped to 47 for the 2010s.
+                                     min_plots = 24,
+                                     effort = T
+    ) %>%
+      add_eras() %>%
+      add_plot_types()
   }
 
 
-  if(use_pre_switch) {
 
-    plot_level <- plot_level %>%
-      dplyr::filter(Use_first,
-                    period > 118,
-                    period < 436) %>%
-      dplyr::mutate(plot_type =
-                      first_trt)
-
-  } else {
-    if(use_christensen_plots) {
-      plot_level <- plot_level %>%
-        dplyr::filter(combined_trt %in% c("RC", "EC", "CC"),
-                      period > 118) %>%
-        dplyr::mutate(plot_type = combined_trt) # control
-    } else {
-      plot_level <- plot_level %>%
-        dplyr::filter(Use_second,
-                      period > 118) %>%
-        dplyr::mutate(plot_type = combined_trt)  # control
-    }
-  }
+  plot_level <- plot_level %>%
+    dplyr::filter(Use_second,
+                  period > 118) %>%
+    dplyr::mutate(plot_type = combined_trt)  # control
 
 
   rodent_names <- c('BA','DM','DO','DS','PB','PE','PF','PH','PI','PL','PM','PP','RF','RM','RO')
@@ -152,11 +133,11 @@ plots_to_treatment_means <- function(plot_level_totals, currency) {
   if(currency == "abundance") {
     treatcols <- colnames(treatment_means)
 
-  treatcols_to_change <- treatcols[ which(grepl("_e", treatcols))]
+    treatcols_to_change <- treatcols[ which(grepl("_e", treatcols))]
 
-  new_treatcols <- stringr::str_replace(treatcols_to_change, "_e", "_n")
+    new_treatcols <- stringr::str_replace(treatcols_to_change, "_e", "_n")
 
-  colnames(treatment_means)[ which(grepl("_e", treatcols))] <- new_treatcols
+    colnames(treatment_means)[ which(grepl("_e", treatcols))] <- new_treatcols
   }
 
   return(treatment_means)
@@ -167,15 +148,14 @@ plots_to_treatment_means <- function(plot_level_totals, currency) {
 #'
 #' For checking
 #'
-#' @param use_pre_switch use treatments to 2015?
 #'
 #' @return dataframe of plots & treatments
 #' @export
 #'
 #' @importFrom dplyr select distinct
-list_plot_types <- function(use_pre_switch = F) {
+list_plot_types <- function() {
 
-  plots <- get_rodent_data(return_plot = T, use_pre_switch = use_pre_switch)
+  plots <- get_rodent_data(return_plot = T)
 
   plots %>%
     dplyr::select(plot, plot_type) %>%
@@ -187,16 +167,15 @@ list_plot_types <- function(use_pre_switch = F) {
 #'
 #' Quick wrapper for get_rodent_data.
 #'
-#' @param use_pre_switch use pre switch T/F
 #' @param currency "energy" or "abundance"
 #' @param clean passed to portalr, whether to use only qa data or not
 #'
 #' @return data
 #' @export
 #'
-get_plot_totals <- function(use_pre_switch = F, currency = "energy", clean = F) {
+get_plot_totals <- function( currency = "energy", clean = F) {
 
-  get_rodent_data(return_plot = T, use_pre_switch = use_pre_switch, currency = currency, clean = clean)
+  get_rodent_data(return_plot = T,  currency = currency, clean = clean)
 
 }
 
@@ -204,15 +183,14 @@ get_plot_totals <- function(use_pre_switch = F, currency = "energy", clean = F) 
 #'
 #' Quick wrapper for get_rodent_data.
 #'
-#' @param use_pre_switch use pre switch T/F
 #' @param currency "energy" or "abundance"
 #' @param clean passed to portalr, whether to use only qa data or not
 #' @return data
 #' @export
 #'
-get_treatment_means <- function(use_pre_switch = F, currency = "energy", clean = F) {
+get_treatment_means <- function(currency = "energy", clean = F) {
 
-  get_rodent_data(return_plot = F, use_pre_switch = use_pre_switch, currency = currency, clean = clean)
+  get_rodent_data(return_plot = F,currency = currency, clean = clean)
 
 }
 
@@ -253,7 +231,7 @@ add_plot_types <- function(dat) {
 
 #' Add "eras"
 #'
-#' Breaking the time series into 4 chunks: prior to 1996, 1996-ca 2010, 2010-2015, post plot switch
+#' Breaking the time series into 3 chunks: Jan 1988-June 1997, July 1997-January 2010, January 2010-January 2020
 #'
 #' @param dat Dataset with column "period"
 #'
@@ -264,9 +242,8 @@ add_plot_types <- function(dat) {
 add_eras <- function(dat) {
   dat <- dat %>%
     dplyr::mutate(era = NA) %>%
-    dplyr::mutate(era = ifelse(period <= 216, "a_pre_ba",
-                               ifelse(period <= 380, "b_pre_cpt",
-                                      ifelse(period <= 436, "c_pre_switch", "d_post-switch")))) %>%
+    dplyr::mutate(era = ifelse(period <= 232, "a_pre_pb",
+                               ifelse(period <= 380, "b_pre_drought", "c_post_drought"))) %>%
     dplyr::mutate(oera = as.ordered(era))
 
   return(dat)
@@ -506,11 +483,6 @@ get_treatment_abundance_matrix <- function(census_season = "winter") {
 remove_switch <- function(a_df) {
 
   a_df %>%
-    dplyr::filter(plot_type %in% c("CC", "EE")) %>%
-    dplyr::group_by_all() %>%
-    dplyr::mutate(era = ifelse(era %in% c("c_pre_switch", "d_post-switch"), "c_post_cpt", era)) %>%
-    dplyr::ungroup() %>%
-    dplyr::mutate(oera = as.ordered(era),
-                  oplottype = as.ordered(plot_type))
+    dplyr::filter(plot_type %in% c("CC", "EE"))
 
 }

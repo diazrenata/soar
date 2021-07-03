@@ -4,10 +4,7 @@
 \alias{list_plot_types}
 \title{List which plots are which treatments}
 \usage{
-list_plot_types(use_pre_switch = F)
-}
-\arguments{
-\item{use_pre_switch}{use treatments to 2015?}
+list_plot_types()
 }
 \value{
 dataframe of plots & treatments

@@ -4,20 +4,10 @@
 \alias{get_rodent_data}
 \title{Get rodent data}
 \usage{
-get_rodent_data(
-  use_christensen_plots = F,
-  return_plot = F,
-  use_pre_switch = F,
-  currency = "energy",
-  clean = F
-)
+get_rodent_data(return_plot = F, currency = "energy", clean = F)
 }
 \arguments{
-\item{use_christensen_plots}{Early in development I was working from the plots used in Christensen (2019 ProcB). Defaults F}
-
-\item{return_plot}{Return plot level energy use or return treatment level. If TRUE, returns plot level totals. If F, returns mean per treatment per period.}
-
-\item{use_pre_switch}{Use data up to the treatment switch in 2015? If yes, allows for more plots of each treatment type.}
+\item{return_plot}{Return plot level energy use or return treatment level. If TRUE, returns plot level totals. If F, returns mean per treatment per period}
 
 \item{currency}{"energy" (default) or "abundance"}
 
