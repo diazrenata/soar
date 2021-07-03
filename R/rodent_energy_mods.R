@@ -21,7 +21,7 @@ est_glm_ilink <- function(glm_mod, glm_dat) {
 
 
   glm_est <- glm_est %>%
-    dplyr::right_join(dplyr::select(glm_dat, oera, oplottype, period, censusdate, pb_prop_ma))
+    dplyr::right_join(dplyr::select(glm_dat, oera, oplottype, period, censusdate))
 
   return(glm_est)
 
