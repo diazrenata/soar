@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - cleanup
   pull_request:
     branches:
       - main
