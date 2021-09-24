@@ -6,9 +6,9 @@ test_that("correct numbers of plots per treatment", {
     dplyr::select(plot_type, nplots) %>%
     dplyr::distinct()
 
-  expect_true(nrow(trt_nplots) == 4)
-  expect_true(all(trt_nplots$plot_type == c("CC", "CE", "EC", "EE")))
-  expect_true(all(trt_nplots$nplots == c(4, 3, 3, 5)))
+  expect_true(nrow(trt_nplots) == 2)
+  expect_true(all(trt_nplots$plot_type == c("CC", "EE")))
+  expect_true(all(trt_nplots$nplots == c(4, 5)))
 
   })
 
