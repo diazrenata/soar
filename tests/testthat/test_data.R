@@ -31,3 +31,27 @@ test_that("plots have correct treatments", {
 
 }
 )
+
+test_that("treatl", {
+
+  treatl <- get_treatment_means()
+  expect_true(min(treatl$period) == 119)
+  expect_true(max(treatl$period) == 494)
+
+  plotl <- get_rodent_data(return_plot = T)
+
+  manual_plotl_1 <- plotl %>%
+    dplyr::filter(period == 300) %>%
+    dplyr::group_by(plot_type) %>%
+    dplyr::summarize(e = mean(total_e),
+                     dipo_e = mean(dipo_e),
+                     pb_e = mean(pb_e),
+                     nplots = dplyr::n())
+
+  treatl_300 <- dplyr::filter(treatl, period == 300)
+
+  expect_true(all(treatl_300$total_e == manual_plotl_1$e))
+  expect_true(all(treatl_300$dipo_e == manual_plotl_1$dipo_e))
+  expect_true(all(treatl_300$pb_e == manual_plotl_1$pb_e))
+
+})
