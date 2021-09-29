@@ -10,7 +10,7 @@ test_that("correct numbers of plots per treatment", {
   expect_true(all(trt_nplots$plot_type == c("CC", "EE")))
   expect_true(all(trt_nplots$nplots == c(4, 5)))
 
-  })
+})
 
 test_that("plots have correct treatments", {
 
@@ -65,7 +65,7 @@ test_that("get pb", {
 
   expect_true(pb$pb_prop[1] == 0)
   expect_true(all.equal(pb$pb_prop,
-                      treatl$pb_e / treatl$total_e))
+                        treatl$pb_e / treatl$total_e))
 
 })
 
@@ -85,4 +85,24 @@ test_that("get e ratio", {
 
   expect_true(nrow(treatl) == 2 * nrow(er))
 
-  })
+})
+
+test_that("compensation", {
+
+  comp <- get_compensation()
+
+  treatl <- get_treatment_means()
+
+
+  tl_300 <- dplyr::filter(treatl, period == 300)
+
+  tl_300_ctrl <- dplyr::filter(tl_300, plot_type == "CC")
+  tl_300_ee <- dplyr::filter(tl_300, plot_type == "EE")
+
+  tl_300_compensation = (tl_300_ee$smgran_e - tl_300_ctrl$smgran_e) / tl_300_ctrl$dipo_e
+
+  expect_true(dplyr::filter(comp, period == 300)$smgran_comp == tl_300_compensation)
+  expect_true(nrow(comp) == nrow(treatl) /2)
+  expect_true(all(unique(comp$period) == unique(treatl$period)))
+
+})
