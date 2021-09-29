@@ -7,11 +7,11 @@
 get_pb(treatl = NULL)
 }
 \arguments{
-\item{treatl}{df}
+\item{treatl}{result of \code{get_treatment_means}}
 }
 \value{
-PB edf
+\code{treatl} with added columns pb_prop, the proportion of total energy accounted for by C. baileyi, and pb_prop_ma, the 6-month moving average of pb_prop.
 }
 \description{
-Get PB data for analysis
+Calculate the proportion of total energy use accounted for by C. baileyi (species code PB) in each time step for each treatment type.
 }

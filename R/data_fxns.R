@@ -207,6 +207,8 @@ add_eras <- function(dat) {
 
 #' Make dataframe of time period transitions
 #'
+#' For plots.
+#'
 #' @return df
 #' @export
 #'

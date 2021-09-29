@@ -10,5 +10,5 @@ make_era_df()
 df
 }
 \description{
-Make dataframe of time period transitions
+For plots.
 }

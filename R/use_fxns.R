@@ -1,8 +1,10 @@
 #' Get PB data for analysis
 #'
-#' @param treatl df
+#' Calculate the proportion of total energy use accounted for by C. baileyi (species code PB) in each time step for each treatment type.
 #'
-#' @return PB edf
+#' @param treatl result of `get_treatment_means`
+#'
+#' @return `treatl` with added columns pb_prop, the proportion of total energy accounted for by C. baileyi, and pb_prop_ma, the 6-month moving average of pb_prop.
 #' @export
 #'
 #' @importFrom dplyr mutate group_by ungroup filter
@@ -22,9 +24,11 @@ get_pb <- function(treatl = NULL) {
 
 #' Get EE energy use as fraction of CC
 #'
-#' @param treatl df
+#' For each timestep, calculate ratio of total granivore energy use on exclosure plots to control plots.
 #'
-#' @return df
+#' @param treatl result of `get_treatment_means`
+#'
+#' @return dataframe with column `total_e_rat`, the ratio of `treatl$total_e` on exclosures relative to controls in each timestep, and `total_e_rat_ma`, the moving average.
 #' @export
 #'
 #' @importFrom dplyr filter select rename left_join mutate group_by ungroup
@@ -43,13 +47,9 @@ get_e_ratio <- function(treatl = NULL) {
     dplyr::filter(plot_type != "CC") %>%
     dplyr::select(period, censusdate, era, oera, plot_type, oplottype, total_e, smgran_e, tinygran_e) %>%
     dplyr::left_join(controls) %>%
-    dplyr::mutate(total_e_rat = total_e / total_e_c,
-             smgran_e_rat = smgran_e / smgran_e_c,
-             tinygran_e_rat = tinygran_e / tinygran_e_c) %>%
+    dplyr::mutate(total_e_rat = total_e / total_e_c) %>%
     dplyr::group_by(plot_type) %>%
-    dplyr::mutate(total_e_rat_ma = maopts(total_e_rat),
-             smgran_e_rat_ma = maopts(smgran_e_rat),
-             tinygran_e_rat_ma = maopts(tinygran_e_rat)) %>%
+    dplyr::mutate(total_e_rat_ma = maopts(total_e_rat)) %>%
     dplyr::ungroup()
 
   return(ee)
@@ -57,9 +57,11 @@ get_e_ratio <- function(treatl = NULL) {
 
 #' Get compensation
 #'
-#' @param treatl df
+#' Calculate degree to which small granivores on exclosure plots compensate for kangaroo rat removal. Compensation calculated as (SmgranEnergy_Exclosures - SmgranEnergy_Controls) / DipoEnergy_Controls.
 #'
-#' @return df
+#' @param treatl result of `get_treatment_means`
+#'
+#' @return df with columns `smgran_comp`, compensation as defined above, and `smgran_comp_ma`, the 6-month moving average.
 #' @export
 #'
 #' @importFrom dplyr filter select rename left_join mutate group_by ungroup

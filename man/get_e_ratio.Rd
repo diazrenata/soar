@@ -7,11 +7,11 @@
 get_e_ratio(treatl = NULL)
 }
 \arguments{
-\item{treatl}{df}
+\item{treatl}{result of \code{get_treatment_means}}
 }
 \value{
-df
+dataframe with column \code{total_e_rat}, the ratio of \code{treatl$total_e} on exclosures relative to controls in each timestep, and \code{total_e_rat_ma}, the moving average.
 }
 \description{
-Get EE energy use as fraction of CC
+For each timestep, calculate ratio of total granivore energy use on exclosure plots to control plots.
 }

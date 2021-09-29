@@ -7,11 +7,11 @@
 get_compensation(treatl = NULL)
 }
 \arguments{
-\item{treatl}{df}
+\item{treatl}{result of \code{get_treatment_means}}
 }
 \value{
-df
+df with columns \code{smgran_comp}, compensation as defined above, and \code{smgran_comp_ma}, the 6-month moving average.
 }
 \description{
-Get compensation
+Calculate degree to which small granivores on exclosure plots compensate for kangaroo rat removal. Compensation calculated as (SmgranEnergy_Exclosures - SmgranEnergy_Controls) / DipoEnergy_Controls.
 }

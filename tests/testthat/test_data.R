@@ -110,3 +110,29 @@ test_that("compensation", {
   expect_true(all(unique(comp$period) == unique(treatl$period)))
 
 })
+
+test_that("eras df", {
+
+
+  edf <- make_era_df()
+
+  expect_true(length(unique(edf$event_name)) == 2)
+  expect_true(all(edf$no_name == ""))
+  expect_true(all(edf$event_period == c(233, 381)))
+
+
+})
+
+test_that("glm_ilink", {
+
+  pb = get_pb()
+
+  pb_nozero <- dplyr::filter(pb, as.numeric(oera) > 1)
+
+  pb_glm <- glm(pb_prop ~ plot_type * era, data = pb_nozero, family = "quasibinomial")
+
+  pb_glm_ilink <- est_glm_ilink(pb_glm, pb_nozero)
+
+  expect_false(anyNA(pb_glm_ilink))
+
+})
