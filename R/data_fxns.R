@@ -5,7 +5,6 @@
 #' Gives data from February 1988 until January 2020.
 #'
 #' @param return_plot Return plot level energy use or return treatment level. If TRUE, returns plot level totals. If F, returns mean per treatment per period
-#' @param currency "energy" (default) or "abundance"
 #' @param clean passed to portalr, whether to use only qa data or not
 #'
 #' @return data
@@ -15,9 +14,8 @@
 #' @importFrom dplyr mutate rename left_join mutate_at group_by ungroup
 #' @importFrom here here
 #' @importFrom stringr str_replace
-get_rodent_data <- function(return_plot = F, currency = "energy", clean =F) {
+get_rodent_data <- function(return_plot = F,clean =F) {
 
-  if(currency == "energy") {
     plot_level <- portalr::energy(clean = clean,
                                   level = "Plot",
                                   type = "Granivores",
@@ -33,29 +31,10 @@ get_rodent_data <- function(return_plot = F, currency = "energy", clean =F) {
     ) %>%
       add_eras() %>%
       add_plot_types()
-  } else if(currency == "abundance") {
-    plot_level <- portalr::abundance(clean = T,
-                                     level = "Plot",
-                                     type = "Granivores",
-                                     plots = "all",
-                                     unknowns = F,
-                                     shape = "crosstab",
-                                     time = "all",
-                                     na_drop = T,
-                                     zero_drop = F,
-                                     min_traps = 45, # allow partially trapped plots - 45 or 47, of 49, plots. Necessary bc apparently plot 24 was often trapped to 47 for the 2010s.
-                                     min_plots = 24,
-                                     effort = T
-    ) %>%
-      add_eras() %>%
-      add_plot_types()
-  }
-
 
 
   plot_level <- plot_level %>%
-    dplyr::filter(Use_second,
-                  period > 118,
+    dplyr::filter(period > 118,
                   period < 495) %>%
     dplyr::mutate(plot_type = combined_trt)  %>%  # control
     dplyr::filter(plot_type %in% c("CC", "EE"))
@@ -83,20 +62,7 @@ get_rodent_data <- function(return_plot = F, currency = "energy", clean =F) {
     dplyr::mutate_at(c("total_e", "dipo_e", "smgran_e", "pb_e", "pp_e", "tinygran_e"), .funs = list(ma = maopts)) %>%
     dplyr::ungroup()
 
-  treatment_means <- plots_to_treatment_means(plot_level_totals, currency = currency)
-
-  if(currency == "abundance") {
-
-    plotcols <- colnames(plot_level_totals)
-
-    plotcols_to_change <- plotcols[ which(grepl("_e", plotcols))]
-
-    new_plotcols <- stringr::str_replace(plotcols_to_change, "_e", "_n")
-
-    colnames(plot_level_totals)[ which(grepl("_e", plotcols))] <- new_plotcols
-
-
-  }
+  treatment_means <- plots_to_treatment_means(plot_level_totals)
 
   if(return_plot) {
     return(plot_level_totals)
@@ -108,14 +74,13 @@ get_rodent_data <- function(return_plot = F, currency = "energy", clean =F) {
 #' Go from plot level totals to treatment means
 #'
 #' @param plot_level_totals plots
-#' @param currency "energy" or "abundance"
 #'
 #' @return treatment means
 #' @export
 #'
 #' @importFrom dplyr group_by summarize ungroup mutate_at
 #' @importFrom stringr str_replace
-plots_to_treatment_means <- function(plot_level_totals, currency) {
+plots_to_treatment_means <- function(plot_level_totals) {
 
 
   treatment_means <- plot_level_totals %>%
@@ -131,16 +96,6 @@ plots_to_treatment_means <- function(plot_level_totals, currency) {
     dplyr::group_by(plot_type, oplottype) %>%
     dplyr::mutate_at(c("total_e", "dipo_e", "smgran_e", "pb_e", "pp_e", "tinygran_e"), .funs = list(ma = maopts)) %>%
     dplyr::ungroup()
-
-  if(currency == "abundance") {
-    treatcols <- colnames(treatment_means)
-
-    treatcols_to_change <- treatcols[ which(grepl("_e", treatcols))]
-
-    new_treatcols <- stringr::str_replace(treatcols_to_change, "_e", "_n")
-
-    colnames(treatment_means)[ which(grepl("_e", treatcols))] <- new_treatcols
-  }
 
   return(treatment_means)
 
@@ -169,15 +124,14 @@ list_plot_types <- function() {
 #'
 #' Quick wrapper for get_rodent_data.
 #'
-#' @param currency "energy" or "abundance"
 #' @param clean passed to portalr, whether to use only qa data or not
 #'
 #' @return data
 #' @export
 #'
-get_plot_totals <- function( currency = "energy", clean = F) {
+get_plot_totals <- function(clean = F) {
 
-  get_rodent_data(return_plot = T,  currency = currency, clean = clean)
+  get_rodent_data(return_plot = T,  clean = clean)
 
 }
 
@@ -185,14 +139,13 @@ get_plot_totals <- function( currency = "energy", clean = F) {
 #'
 #' Quick wrapper for get_rodent_data.
 #'
-#' @param currency "energy" or "abundance"
 #' @param clean passed to portalr, whether to use only qa data or not
 #' @return data
 #' @export
 #'
-get_treatment_means <- function(currency = "energy", clean = F) {
+get_treatment_means <- function(clean = F) {
 
-  get_rodent_data(return_plot = F,currency = currency, clean = clean)
+  get_rodent_data(return_plot = F, clean = clean)
 
 }
 

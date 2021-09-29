@@ -4,11 +4,9 @@
 \alias{get_plot_totals}
 \title{Get plot totals}
 \usage{
-get_plot_totals(currency = "energy", clean = F)
+get_plot_totals(clean = F)
 }
 \arguments{
-\item{currency}{"energy" or "abundance"}
-
 \item{clean}{passed to portalr, whether to use only qa data or not}
 }
 \value{

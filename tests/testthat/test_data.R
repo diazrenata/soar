@@ -40,6 +40,10 @@ test_that("treatl", {
 
   plotl <- get_rodent_data(return_plot = T)
 
+  plotl1 <- get_plot_totals()
+
+  expect_true(all.equal(plotl, plotl1))
+
   manual_plotl_1 <- plotl %>%
     dplyr::filter(period == 300) %>%
     dplyr::group_by(plot_type) %>%

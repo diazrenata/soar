@@ -4,12 +4,10 @@
 \alias{plots_to_treatment_means}
 \title{Go from plot level totals to treatment means}
 \usage{
-plots_to_treatment_means(plot_level_totals, currency)
+plots_to_treatment_means(plot_level_totals)
 }
 \arguments{
 \item{plot_level_totals}{plots}
-
-\item{currency}{"energy" or "abundance"}
 }
 \value{
 treatment means

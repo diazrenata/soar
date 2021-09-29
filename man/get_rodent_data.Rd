@@ -4,12 +4,10 @@
 \alias{get_rodent_data}
 \title{Get rodent data}
 \usage{
-get_rodent_data(return_plot = F, currency = "energy", clean = F)
+get_rodent_data(return_plot = F, clean = F)
 }
 \arguments{
 \item{return_plot}{Return plot level energy use or return treatment level. If TRUE, returns plot level totals. If F, returns mean per treatment per period}
-
-\item{currency}{"energy" (default) or "abundance"}
 
 \item{clean}{passed to portalr, whether to use only qa data or not}
 }
