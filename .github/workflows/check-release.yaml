@@ -5,6 +5,7 @@ on:
     branches:
       - main
       - master
+      - cleanup
   pull_request:
     branches:
       - main
@@ -13,7 +14,7 @@ on:
 name: R-CMD-check
 
 jobs:
-  R-CMD-check:
+   R-CMD-check:
     runs-on: macOS-latest
     env:
       GITHUB_PAT: ${{ secrets.GITHUB_TOKEN }}
@@ -29,4 +30,7 @@ jobs:
         run: |
           options(crayon.enabled = TRUE)
           rcmdcheck::rcmdcheck(args = "--no-manual", error_on = "error")
+        shell: Rscript {0}
+      - name: Test coverage
+        run: covr::codecov()
         shell: Rscript {0}
