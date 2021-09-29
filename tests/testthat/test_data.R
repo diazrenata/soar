@@ -55,3 +55,34 @@ test_that("treatl", {
   expect_true(all(treatl_300$pb_e == manual_plotl_1$pb_e))
 
 })
+
+
+test_that("get pb", {
+
+  pb <- get_pb()
+
+  treatl <- get_treatment_means()
+
+  expect_true(pb$pb_prop[1] == 0)
+  expect_true(all.equal(pb$pb_prop,
+                      treatl$pb_e / treatl$total_e))
+
+})
+
+
+test_that("get e ratio", {
+
+  er <- get_e_ratio()
+
+  treatl <- get_treatment_means()
+
+  tl_300 <- dplyr::filter(treatl, period == 300)
+
+  er_300 <- dplyr::filter(er, period == 300)
+
+  expect_true(er_300$total_e_rat == tl_300$total_e[2] / tl_300$total_e[1])
+  expect_true(all(unique(treatl$period) == unique(er$period)))
+
+  expect_true(nrow(treatl) == 2 * nrow(er))
+
+  })

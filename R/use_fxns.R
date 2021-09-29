@@ -8,8 +8,7 @@
 #' @importFrom dplyr mutate group_by ungroup filter
 get_pb <- function(treatl = NULL) {
   if(is.null(treatl)) {
-  treatl <- get_treatment_means() %>%
-    remove_switch()
+  treatl <- get_treatment_means()
   }
 
   pb <- treatl %>%
@@ -31,8 +30,7 @@ get_pb <- function(treatl = NULL) {
 #' @importFrom dplyr filter select rename left_join mutate group_by ungroup
 get_e_ratio <- function(treatl = NULL) {
   if(is.null(treatl)) {
-    treatl <- get_treatment_means() %>%
-      remove_switch()
+    treatl <- get_treatment_means()
   }
 
 
@@ -67,8 +65,7 @@ get_e_ratio <- function(treatl = NULL) {
 #' @importFrom dplyr filter select rename left_join mutate group_by ungroup
 get_compensation <- function(treatl = NULL) {
   if(is.null(treatl)) {
-    treatl <- get_treatment_means() %>%
-     remove_switch()
+    treatl <- get_treatment_means()
   }
 
   controls <- treatl %>%

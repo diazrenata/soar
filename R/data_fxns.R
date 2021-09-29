@@ -55,7 +55,8 @@ get_rodent_data <- function(return_plot = F, currency = "energy", clean =F) {
 
   plot_level <- plot_level %>%
     dplyr::filter(Use_second,
-                  period > 118) %>%
+                  period > 118,
+                  period < 495) %>%
     dplyr::mutate(plot_type = combined_trt)  %>%  # control
     dplyr::filter(plot_type %in% c("CC", "EE"))
 
