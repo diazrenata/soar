@@ -8,6 +8,8 @@ get_treatment_means(clean = F)
 }
 \arguments{
 \item{clean}{passed to portalr, whether to use only qa data or not}
+
+\item{currency}{"energy" or "biomass"}
 }
 \value{
 data
