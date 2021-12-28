@@ -74,6 +74,19 @@ test_that("get pb", {
 })
 
 
+test_that("get dipo", {
+
+  dipo <- get_dipo_c()
+
+  treatl <- get_treatment_means()
+
+  treatl <- treatl %>%
+    dplyr::filter(oplottype == "CC")
+
+  expect_true(all.equal(dipo$dipo_prop,
+                        treatl$dipo_e / treatl$total_e))
+
+})
 test_that("get e ratio", {
 
   er <- get_e_ratio()

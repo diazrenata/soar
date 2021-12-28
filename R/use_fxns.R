@@ -10,7 +10,7 @@
 #' @importFrom dplyr mutate group_by ungroup filter
 get_pb <- function(treatl = NULL) {
   if(is.null(treatl)) {
-  treatl <- get_treatment_means()
+    treatl <- get_treatment_means()
   }
 
   pb <- treatl %>%
@@ -20,6 +20,35 @@ get_pb <- function(treatl = NULL) {
     dplyr::ungroup()
 
   return(pb)
+}
+
+#' Get Dipo data for analysis.
+#'
+#' Get kangaroo rat proportional energy use on control plots in each time step for each treatment type.
+#'
+#' @param treatl result of `get_treatment_means`
+#'
+#' @return `treatl` with added columns dipo_prop, the proportion of total energy accounted for by all Dipodomys, and dipo_prop_ma, the 6-month moving average of dipo_prop_ma.
+#'
+#' @return
+#' @export
+#'
+#' @importFrom dplyr mutate group_by ungroup filter
+get_dipo_c <- function(treatl  = NULL) {
+  if(is.null(treatl)) {
+    treatl <- get_treatment_means()
+  }
+
+  dipo_dat <- treatl %>%
+    dplyr::mutate(dipo_prop = dipo_e / total_e) %>%
+    dplyr::group_by(oplottype) %>%
+    dplyr::mutate(dipo_prop_ma = maopts(dipo_prop)) %>%
+    dplyr::ungroup()
+
+  dipo_c_dat <- dipo_dat %>%
+    dplyr::filter(oplottype == "CC")
+
+  return(dipo_c_dat)
 }
 
 #' Get EE energy use as fraction of CC

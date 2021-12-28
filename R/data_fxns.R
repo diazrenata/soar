@@ -167,7 +167,7 @@ get_plot_totals <- function(clean = F, currency = "energy") {
 #' @return data
 #' @export
 #'
-get_treatment_means <- function(clean = F) {
+get_treatment_means <- function(clean = F, currency = "energy") {
 
   get_rodent_data(return_plot = F, clean = clean, currency = currency)
 
