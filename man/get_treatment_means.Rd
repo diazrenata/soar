@@ -4,7 +4,7 @@
 \alias{get_treatment_means}
 \title{Get treatment means}
 \usage{
-get_treatment_means(clean = F)
+get_treatment_means(clean = F, currency = "energy")
 }
 \arguments{
 \item{clean}{passed to portalr, whether to use only qa data or not}
