@@ -60,6 +60,19 @@ test_that("treatl", {
 
 })
 
+test_that("currencies are correct", {
+
+  energy <- get_plot_totals()
+  biomass <- get_plot_totals(currency = "biomass")
+
+  # energy is in kJ and biomass is in g, so energy is always much bigger numbers (unless both are 0)
+  expect_true(all(energy$total_e >= biomass$total_e))
+
+  # check they aren't all just equal
+  expect_false(all(energy$total_e == biomass$total_e))
+
+
+})
 
 test_that("get pb", {
 
@@ -74,6 +87,19 @@ test_that("get pb", {
 })
 
 
+test_that("get dipo", {
+
+  dipo <- get_dipo_c()
+
+  treatl <- get_treatment_means()
+
+  treatl <- treatl %>%
+    dplyr::filter(oplottype == "CC")
+
+  expect_true(all.equal(dipo$dipo_prop,
+                        treatl$dipo_e / treatl$total_e))
+
+})
 test_that("get e ratio", {
 
   er <- get_e_ratio()

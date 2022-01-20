@@ -6,15 +6,19 @@
 #'
 #' @param return_plot Return plot level energy use or return treatment level. If TRUE, returns plot level totals. If F, returns mean per treatment per period
 #' @param clean passed to portalr, whether to use only qa data or not
+#' @param currency "energy" or "biomass"
 #'
 #' @return data
 #' @export
 #'
-#' @importFrom portalr energy
+#' @importFrom portalr energy biomass
 #' @importFrom dplyr mutate rename left_join mutate_at group_by ungroup
 #' @importFrom here here
 #' @importFrom stringr str_replace
-get_rodent_data <- function(return_plot = F,clean =F) {
+get_rodent_data <- function(return_plot = F,clean =F, currency = "energy") {
+
+
+  if(currency == "energy") {
 
     plot_level <- portalr::energy(clean = clean,
                                   level = "Plot",
@@ -31,6 +35,25 @@ get_rodent_data <- function(return_plot = F,clean =F) {
     ) %>%
       add_eras() %>%
       add_plot_types()
+
+  } else if(currency == "biomass") {
+
+    plot_level <- portalr::biomass(clean = clean,
+                                  level = "Plot",
+                                  type = "Granivores",
+                                  plots = "all",
+                                  unknowns = F,
+                                  shape = "crosstab",
+                                  time = "all",
+                                  na_drop = T,
+                                  zero_drop = F,
+                                  min_traps = 45, # allow partially trapped plots - 45 or 47, of 49, plots. Necessary bc apparently plot 24 was often trapped to 47 for the 2010s.
+                                  min_plots = 24,
+                                  effort = T
+    ) %>%
+      add_eras() %>%
+      add_plot_types()
+  }
 
 
   plot_level <- plot_level %>%
@@ -125,13 +148,13 @@ list_plot_types <- function() {
 #' Quick wrapper for get_rodent_data.
 #'
 #' @param clean passed to portalr, whether to use only qa data or not
-#'
+#' @param currency "energy" or "biomass"
 #' @return data
 #' @export
 #'
-get_plot_totals <- function(clean = F) {
+get_plot_totals <- function(clean = F, currency = "energy") {
 
-  get_rodent_data(return_plot = T,  clean = clean)
+  get_rodent_data(return_plot = T,  clean = clean, currency = currency)
 
 }
 
@@ -140,12 +163,13 @@ get_plot_totals <- function(clean = F) {
 #' Quick wrapper for get_rodent_data.
 #'
 #' @param clean passed to portalr, whether to use only qa data or not
+#' @param currency "energy" or "biomass"
 #' @return data
 #' @export
 #'
-get_treatment_means <- function(clean = F) {
+get_treatment_means <- function(clean = F, currency = "energy") {
 
-  get_rodent_data(return_plot = F, clean = clean)
+  get_rodent_data(return_plot = F, clean = clean, currency = currency)
 
 }
 
