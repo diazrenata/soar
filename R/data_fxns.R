@@ -148,7 +148,7 @@ list_plot_types <- function() {
 #' Quick wrapper for get_rodent_data.
 #'
 #' @param clean passed to portalr, whether to use only qa data or not
-#' #' @param currency "energy" or "biomass"
+#' @param currency "energy" or "biomass"
 #' @return data
 #' @export
 #'
